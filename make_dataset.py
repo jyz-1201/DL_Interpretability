@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 def main():
     parser = argparse.ArgumentParser()
 
-    ## Required parameters
+    # Required parameters
     parser.add_argument("--input_dir", default=None, type=str, required=True,
                         help="all files in this directory will be made into dataset")
 
-    ## Other parameters
+    # Other parameters
 
     # print arguments
     args = parser.parse_args()
@@ -29,16 +29,18 @@ def main():
     files = [join(input_dir, f) for f in listdir(input_dir) if isfile(join(input_dir, f))]
 
     for data_file in files:
+        if data_file.find("parsed") != -1:
+            continue
+        print(data_file)
         with open(data_file, 'r') as file:
-            Lines = file.readlines()
-            for line in Lines:
-                doc = nlp(line)
-                print(*[
-                    f'{word.text}\t{word.head}\t{word.id}\t{word.deprel}'
-                    for sent in doc.sentences for word in sent.words], sep='\n')
-                print(*[
-                    f'id: {word.id}\tword: {word.text}\thead id: {word.head}\thead: {sent.words[word.head - 1].text if word.head > 0 else "root"}\tdeprel: {word.deprel}'
-                    for sent in doc.sentences for word in sent.words], sep='\n')
+            with open(data_file + "_parsed", 'w') as file_parsed:
+                lines = file.readlines()
+                for line in lines:
+                    doc = nlp(line)
+                    for sent in doc.sentences:
+                        for word in sent.words:
+                            if word.deprel != "root":
+                                file_parsed.write(f'{word.text}\t{word.head}\t{word.id}\t{word.deprel}\n')
 
 
 
